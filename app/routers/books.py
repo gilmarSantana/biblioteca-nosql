@@ -1,6 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, status
 from app.database import db  # Importando a instância do banco de dados do módulo database.py
 from app.models.book import BookSchema
+from bson import ObjectId
+from bson.errors import InvalidId
+from app.utils.errors import raise_api_error
+
 
 books_router = APIRouter(prefix="/books", tags=["Books"])
 
@@ -16,3 +20,23 @@ def get_all_books():
         doc['_id'] = str(doc['_id'])
     
     return books
+
+@books_router.get("/{book_id}", response_model=BookSchema)
+def get_book_by_id(book_id: str):
+    
+    try:
+        object_id = ObjectId(book_id)
+    except InvalidId:
+        raise_api_error(status.HTTP_400_BAD_REQUEST, "O book_id informado está num formato inválido", "INVALID_BOOK_ID")       
+     
+    book = db.livros.find_one({"_id": object_id})
+  
+    if not book:
+        raise_api_error(status.HTTP_404_NOT_FOUND, "Livro não encontrado", "BOOK_NOT_FOUND" )
+                
+    
+    book['_id'] = str(book['_id'])
+    
+    return book
+    
+    
