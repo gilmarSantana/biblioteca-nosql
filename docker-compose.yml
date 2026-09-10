@@ -1,0 +1,18 @@
+services:
+  mongo:
+    image: mongo:latest
+    restart: unless-stopped
+    ports:
+      - "27017:27017" # Mapeia a porta do container para a porta do host
+    container_name: mongodb
+    volumes:
+      - mongodb:/data/db # Monta um volume para persistência de dados
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+
+volumes:
+  mongodb:
+    external: false
+
+

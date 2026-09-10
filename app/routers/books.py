@@ -1,53 +1,18 @@
 from fastapi import APIRouter
+from app.database import db  # Importando a instância do banco de dados do módulo database.py
+from app.models.book import BookSchema
 
 books_router = APIRouter(prefix="/books", tags=["Books"])
 
-@books_router.get("")
+@books_router.get("", response_model=list[BookSchema])
 def get_all_books():
-    mock_livros_db = {
-        "livros": [
-            {
-                "id": 1,
-                "title": "Entendendo Algoritmos",
-                "subtitle": "Um Guia Ilustrado Para Programadores e Outros Curiosos",
-                "authors": ["Aditya Y. Bhargava"],
-                "isbn": "978-8575225639",
-                "category": "Ciência da Computação"
-            },
-            {
-                "id": 2,
-                "title": "Código Limpo",
-                "subtitle": "Habilidades Práticas do Agile Software",
-                "authors": ["Robert C. Martin"],
-                "isbn": "978-8576082675",
-                "category": "Engenharia de Software"
-            },
-            {
-                "id": 3,
-                "title": "Arquitetura Limpa",
-                "subtitle": "O Guia do Artesão para Estrutura e Design de Software",
-                "authors": ["Robert C. Martin"],
-                "isbn": "978-8550804606",
-                "category": "Engenharia de Software"
-            },
-            {
-                "id": 4,
-                "title": "Padrões de Projetos",
-                "subtitle": "Soluções Reutilizáveis de Software Orientado a Objetos",
-                "authors": ["Erich Gamma", "Richard Helm", "Ralph Johnson", "John Vlissides"],
-                "isbn": "978-8573076103",
-                "category": "Arquitetura de Software"
-            },
-            {
-                "id": 5,
-                "title": "Python Fluente",
-                "subtitle": "Programação Clara, Concisa e Eficaz",
-                "authors": ["Luciano Ramalho"],
-                "isbn": "978-8575228623",
-                "category": "Programação"
-            }
-        ]
-    }
+    filter = {} # Um dict vazio significa "Trazer tudo"
 
-   
-    return mock_livros_db
+    cursor = db.livros.find(filter) # Retorna um cursor, que é um iterador
+    books = list(cursor) # Converte o cursor em uma lista de dicionários
+    
+    # Converte o tipo do campo _id, pois originalmente no mongo ele é do tipo ObjectId e o nosso BookModel requer uma str e a fastapi não consegue converter esse tipo para json para dar o retorno para o usuario da api
+    for doc in books:
+        doc['_id'] = str(doc['_id'])
+    
+    return books
